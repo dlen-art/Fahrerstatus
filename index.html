@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fahrerstatus</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="box" id="fahrerScreen">
+
+    <h1>🚛 Fahrerstatus</h1>
+
+    <p>Bitte geben Sie Ihren Namen ein</p>
+
+    <input
+        id="fahrerName"
+        type="text"
+        placeholder="Ihr Name">
+
+    <br><br>
+
+    <button class="scanButton" onclick="fahrerSpeichern()">
+        Weiter
+    </button>
+
+</div>
+
+
+<div class="box" id="scanScreen">
+
+    <h1>🚛 Fahrerstatus</h1>
+
+    <p id="fahrerAnzeige"></p>
+
+    <button class="scanButton" onclick="startQrScanner()">
+        📷 QR-Code scannen
+    </button>
+
+    <button onclick="fahrerWechseln()">
+        👤 Fahrer ändern
+    </button>
+
+</div>
+
+
+<div class="box" id="cameraScreen">
+
+    <h1>📷 QR-Code scannen</h1>
+
+    <div id="reader"></div>
+
+</div>
+
+
+<div class="box" id="statusScreen">
+
+    <h1>🚛 Fahrerstatus</h1>
+
+    <h2 id="tour"></h2>
+
+    <p id="schicht"></p>
+
+    <button class="green" onclick="statusSenden('Angekommen')">
+        🟢 Angekommen
+    </button>
+
+    <button class="blue" onclick="statusSenden('Abfahrt')">
+        🔵 Abfahrt
+    </button>
+
+    <button class="yellow" onclick="statusSenden('Rückweg')">
+        🟡 Rückweg
+    </button>
+
+</div>
+
+
+<div class="box" id="successScreen">
+
+    <h1>✔</h1>
+
+    <h2>Status erfolgreich gesendet</h2>
+
+    <p id="meldung"></p>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
