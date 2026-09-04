@@ -1,9 +1,12 @@
+const urlParameter = new URLSearchParams(window.location.search);
+const tourParameter = urlParameter.get("tour");
+
 let aktuelleTour = "";
 let aktuelleSchicht = "";
 
 let fahrer = localStorage.getItem("fahrer");
 
-let html5QrCode;
+let html5QrCode = null;
 
 
 window.onload = function () {
@@ -16,7 +19,15 @@ window.onload = function () {
 
     if (fahrer) {
 
-        document.getElementById("scanScreen").style.display = "block";
+        if (tourParameter) {
+
+            tourOeffnen(tourParameter);
+
+        } else {
+
+            document.getElementById("scanScreen").style.display = "block";
+
+        }
 
     } else {
 
@@ -43,7 +54,16 @@ function fahrerSpeichern() {
     fahrer = name;
 
     document.getElementById("fahrerScreen").style.display = "none";
-    document.getElementById("scanScreen").style.display = "block";
+
+    if (tourParameter) {
+
+        tourOeffnen(tourParameter);
+
+    } else {
+
+        document.getElementById("scanScreen").style.display = "block";
+
+    }
 
 }
 
@@ -73,18 +93,31 @@ function startQrScanner() {
             qrbox: 250
         },
 
-        qrCodeErkannt
+        function (text) {
+
+            if (html5QrCode) {
+
+                html5QrCode.stop().then(function () {
+
+                    html5QrCode = null;
+
+                    tourOeffnen(text);
+
+                });
+
+            }
+
+        }
 
     );
 
 }
 
 
-function qrCodeErkannt(text) {
-
-    html5QrCode.stop();
+function tourOeffnen(text) {
 
     document.getElementById("cameraScreen").style.display = "none";
+    document.getElementById("scanScreen").style.display = "none";
     document.getElementById("statusScreen").style.display = "block";
 
     let daten = text.split("-");
