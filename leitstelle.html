@@ -68,10 +68,9 @@
             font-weight: bold;
         }
 
-        #keineDaten {
-            color: #aaaaaa;
-            font-size: 20px;
-            margin-top: 30px;
+        .status-offen {
+            color: #9aa0a6;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -86,7 +85,7 @@
         Live-Übersicht der aktuellen Touren
     </div>
 
-    <table id="statusTabelle" style="display:none;">
+    <table>
 
         <thead>
             <tr>
@@ -102,10 +101,6 @@
         </tbody>
 
     </table>
-
-    <div id="keineDaten">
-        Warte auf Fahrerstatus...
-    </div>
 
 </div>
 
@@ -147,66 +142,77 @@
     const statusRef = ref(database, "status");
 
 
+    const aktiveTouren = [
+        "4001",
+        "4003",
+        "4004",
+        "4005",
+        "4006",
+        "4010",
+        "4011",
+        "4013",
+        "4028",
+        "4031",
+        "5010",
+        "5011",
+        "5026",
+        "5032"
+    ];
+
+
     onValue(statusRef, function(snapshot) {
 
-        const daten = snapshot.val();
+        const daten = snapshot.val() || {};
 
         const liste = document.getElementById("statusListe");
-
-        const tabelle = document.getElementById("statusTabelle");
-
-        const keineDaten = document.getElementById("keineDaten");
-
 
         liste.innerHTML = "";
 
 
-        if (!daten) {
-
-            tabelle.style.display = "none";
-
-            keineDaten.style.display = "block";
-
-            return;
-
-        }
-
-
-        tabelle.style.display = "table";
-
-        keineDaten.style.display = "none";
-
-
-        Object.keys(daten).sort().forEach(function(tourNummer) {
+        aktiveTouren.forEach(function(tourNummer) {
 
             const eintrag = daten[tourNummer];
 
-            let statusText = eintrag.status;
+            let fahrer = "-";
+            let schicht = "-";
+            let statusText = "⚪ Noch keine Meldung";
+            let statusKlasse = "status-offen";
+            let zeit = "-";
 
-            let statusKlasse = "";
+
+            if (eintrag) {
+
+                fahrer = eintrag.fahrer || "-";
+                schicht = eintrag.schicht || "-";
+                zeit = eintrag.zeit || "-";
 
 
-            if (eintrag.status === "Angekommen") {
+                if (eintrag.status === "Angekommen") {
 
-                statusText = "🟢 Angekommen";
+                    statusText = "🟢 Angekommen";
+                    statusKlasse = "status-angekommen";
 
-                statusKlasse = "status-angekommen";
+                }
 
-            }
+                else if (eintrag.status === "Abfahrt") {
 
-            else if (eintrag.status === "Abfahrt") {
+                    statusText = "🔵 Abfahrt";
+                    statusKlasse = "status-abfahrt";
 
-                statusText = "🔵 Abfahrt";
+                }
 
-                statusKlasse = "status-abfahrt";
+                else if (eintrag.status === "Rückweg") {
 
-            }
+                    statusText = "🟡 Rückweg";
+                    statusKlasse = "status-rueckweg";
 
-            else if (eintrag.status === "Rückweg") {
+                }
 
-                statusText = "🟡 Rückweg";
+                else {
 
-                statusKlasse = "status-rueckweg";
+                    statusText = eintrag.status || "⚪ Noch keine Meldung";
+
+                }
 
             }
 
@@ -216,17 +222,17 @@
 
             zeile.innerHTML =
 
-                "<td><b>" + eintrag.tour + "</b></td>" +
+                "<td><b>" + tourNummer + "</b></td>" +
 
-                "<td>" + eintrag.fahrer + "</td>" +
+                "<td>" + fahrer + "</td>" +
 
-                "<td>" + eintrag.schicht + "</td>" +
+                "<td>" + schicht + "</td>" +
 
                 "<td class='" + statusKlasse + "'>" +
                     statusText +
                 "</td>" +
 
-                "<td>" + eintrag.zeit + "</td>";
+                "<td>" + zeit + "</td>";
 
 
             liste.appendChild(zeile);
