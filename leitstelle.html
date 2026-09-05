@@ -106,8 +106,14 @@
             margin-bottom: 15px;
         }
 
+        .historie-hinweis {
+            color: #8f9398;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
         .historie-scroll {
-            max-height: 360px;
+            max-height: 390px;
             overflow-y: auto;
             border-radius: 10px;
             background: #242528;
@@ -115,9 +121,9 @@
 
         .historie-eintrag {
             display: grid;
-            grid-template-columns: 110px 130px 1fr 180px;
+            grid-template-columns: 120px 120px 1fr 200px;
             gap: 15px;
-            padding: 13px 18px;
+            padding: 14px 18px;
             border-bottom: 1px solid #3b3c3f;
             align-items: center;
             font-size: 17px;
@@ -148,6 +154,10 @@
 
             body {
                 padding: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
             }
 
             .historie-box {
@@ -181,13 +191,11 @@
         <thead>
 
             <tr>
-
                 <th>Tour</th>
                 <th>Fahrer</th>
                 <th>Schicht</th>
                 <th>Status</th>
                 <th>Zeit</th>
-
             </tr>
 
         </thead>
@@ -212,9 +220,6 @@
         getDatabase,
         ref,
         onValue,
-        query,
-        orderByChild,
-        limitToLast,
         get
     }
     from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
@@ -313,7 +318,7 @@
 
 
 
-    async function historieOeffnen(tourNummer, historieZeile) {
+    async function archivOeffnen(tourNummer, historieZeile) {
 
         if (historieZeile.classList.contains("offen")) {
 
@@ -346,37 +351,20 @@
 
         try {
 
-            /*
-                Alle Meldungen werden vom Fahrer
-                unter "archiv/Tournummer" gespeichert.
-            */
-
             const archivRef =
                 ref(database, "archiv/" + tourNummer);
 
 
-            const archivQuery = query(
-
-                archivRef,
-
-                orderByChild("timestamp"),
-
-                limitToLast(36)
-
-            );
+            const snapshot =
+                await get(archivRef);
 
 
-            const snapshot = await get(archivQuery);
-
-            const daten = snapshot.val();
-
-
-            if (!daten) {
+            if (!snapshot.exists()) {
 
                 historieInhalt.innerHTML =
 
                     "<div class='historie-leer'>" +
-                    "Noch keine Meldungen im Archiv vorhanden." +
+                    "Noch keine Meldungen vorhanden." +
                     "</div>";
 
                 return;
@@ -384,18 +372,24 @@
             }
 
 
-            let eintraege = Object.values(daten);
+            const daten =
+                snapshot.val();
 
 
-            /*
-                Neueste Meldung zuerst
-            */
+            let eintraege =
+                Object.values(daten);
+
 
             eintraege.sort(function(a, b) {
 
-                return b.timestamp - a.timestamp;
+                return (b.timestamp || 0) -
+                       (a.timestamp || 0);
 
             });
+
+
+            eintraege =
+                eintraege.slice(0, 36);
 
 
             historieInhalt.innerHTML = "";
@@ -418,34 +412,21 @@
                 zeile.innerHTML =
 
                     "<div class='historie-datum'>" +
-
                         (eintrag.datum || "-") +
-
                     "</div>" +
-
 
                     "<div class='historie-zeit'>" +
-
                         (eintrag.zeit || "-") +
-
                     "</div>" +
-
 
                     "<div class='" +
-
                         status.klasse +
-
                     "'>" +
-
                         status.text +
-
                     "</div>" +
 
-
                     "<div class='historie-fahrer'>" +
-
                         (eintrag.fahrer || "-") +
-
                     "</div>";
 
 
@@ -493,9 +474,7 @@
 
 
             let fahrer = "-";
-
             let schicht = "-";
-
             let zeit = "-";
 
             let status =
@@ -533,41 +512,25 @@
             zeile.innerHTML =
 
                 "<td><b>" +
-
                     tourNummer +
-
                 "</b></td>" +
 
-
                 "<td>" +
-
                     fahrer +
-
                 "</td>" +
-
 
                 "<td>" +
-
                     schicht +
-
                 "</td>" +
-
 
                 "<td class='" +
-
                     status.klasse +
-
                 "'>" +
-
                     status.text +
-
                 "</td>" +
 
-
                 "<td>" +
-
                     zeit +
-
                 "</td>";
 
 
@@ -587,18 +550,18 @@
                     "<div class='historie-box'>" +
 
                         "<div class='historie-titel'>" +
-
                             "Verlauf – Tour " +
                             tourNummer +
+                        "</div>" +
 
+                        "<div class='historie-hinweis'>" +
+                            "Letzte 36 Meldungen" +
                         "</div>" +
 
                         "<div class='historie-scroll'>" +
 
                             "<div class='historie-leer'>" +
-
                                 "Archiv laden..." +
-
                             "</div>" +
 
                         "</div>" +
@@ -615,12 +578,9 @@
 
                 function() {
 
-                    historieOeffnen(
-
+                    archivOeffnen(
                         tourNummer,
-
                         historieZeile
-
                     );
 
                 }
