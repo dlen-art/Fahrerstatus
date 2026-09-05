@@ -101,9 +101,19 @@ function startQrScanner() {
 
                     html5QrCode = null;
 
-                    tourOeffnen(text);
+                    qrInhaltVerarbeiten(text);
+
+                }).catch(function () {
+
+                    html5QrCode = null;
+
+                    qrInhaltVerarbeiten(text);
 
                 });
+
+            } else {
+
+                qrInhaltVerarbeiten(text);
 
             }
 
@@ -114,16 +124,55 @@ function startQrScanner() {
 }
 
 
+function qrInhaltVerarbeiten(text) {
+
+    let tourText = text.trim();
+
+    // Neuer QR-Code mit kompletter Internetadresse
+    if (tourText.startsWith("http://") || tourText.startsWith("https://")) {
+
+        try {
+
+            let qrUrl = new URL(tourText);
+            let qrTour = qrUrl.searchParams.get("tour");
+
+            if (qrTour) {
+
+                tourText = qrTour;
+
+            }
+
+        } catch (fehler) {
+
+            alert("QR-Code konnte nicht gelesen werden.");
+            return;
+
+        }
+
+    }
+
+    tourOeffnen(tourText);
+
+}
+
+
 function tourOeffnen(text) {
+
+    let daten = text.split("-");
+
+    if (daten.length < 2) {
+
+        alert("Ungültiger QR-Code.");
+        return;
+
+    }
+
+    aktuelleTour = daten[0].trim();
+    aktuelleSchicht = daten[1].trim().toUpperCase();
 
     document.getElementById("cameraScreen").style.display = "none";
     document.getElementById("scanScreen").style.display = "none";
     document.getElementById("statusScreen").style.display = "block";
-
-    let daten = text.split("-");
-
-    aktuelleTour = daten[0];
-    aktuelleSchicht = daten[1];
 
     document.getElementById("tour").innerHTML =
         "Tour " + aktuelleTour;
@@ -134,28 +183,50 @@ function tourOeffnen(text) {
     switch (aktuelleSchicht) {
 
         case "F8":
+
             document.getElementById("schicht").innerHTML +=
                 "🌅 Frühschicht (8 Stunden)";
+
             break;
+
 
         case "S8":
+
             document.getElementById("schicht").innerHTML +=
                 "🌇 Spätschicht (8 Stunden)";
+
             break;
+
 
         case "T12":
+
             document.getElementById("schicht").innerHTML +=
                 "☀️ Tagschicht (12 Stunden)";
+
             break;
+
 
         case "N8":
+
             document.getElementById("schicht").innerHTML +=
                 "🌙 Nachtschicht (8 Stunden)";
+
             break;
 
+
         case "N12":
+
             document.getElementById("schicht").innerHTML +=
                 "🌙 Nachtschicht (12 Stunden)";
+
+            break;
+
+
+        default:
+
+            document.getElementById("schicht").innerHTML +=
+                "Schicht: " + aktuelleSchicht;
+
             break;
 
     }
