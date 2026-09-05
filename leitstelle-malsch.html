@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Fahrerstatus – Leitstelle Bischweier</title>
+    <title>Fahrerstatus – Leitstelle Malsch</title>
 
     <style>
 
@@ -60,7 +60,7 @@
             background: #2d7ff9;
         }
 
-        .malsch-button {
+        .bischweier-button {
             background: #55585d;
         }
 
@@ -255,6 +255,7 @@
             .historie-eintrag {
                 grid-template-columns: 1fr 1fr;
             }
+
         }
 
     </style>
@@ -269,7 +270,7 @@
 
         <div class="titelbereich">
 
-            <h1>🚚 Fahrerstatus – Leitstelle Bischweier</h1>
+            <h1>🚚 Fahrerstatus – Leitstelle Malsch</h1>
 
             <div class="untertitel">
                 Live-Übersicht der aktuellen Touren
@@ -283,8 +284,8 @@
                 📁 Archiv
             </a>
 
-            <a class="kopf-button malsch-button" href="leitstelle-malsch.html">
-                🏢 Malsch
+            <a class="kopf-button bischweier-button" href="leitstelle.html">
+                🏢 Bischweier
             </a>
 
         </div>
@@ -355,22 +356,18 @@
 
     const aktiveTouren = [
 
-        "4001",
-        "4003",
-        "4004",
-        "4005",
-        "4006",
-        "4010",
-        "4011",
-        "4013",
-        "4028",
-        "4031",
-        "5010",
-        "5011",
-        "5026",
-        "5032",
-        "SoFa 1",
-        "SoFa 2"
+        "4002",
+        "4020",
+        "IVM 1",
+        "IVM 2",
+        "Kombi-Route",
+        "5022",
+        "5003",
+        "5020",
+        "5001",
+        "SoFa Malsch",
+        "All",
+        "Tech. Absicherung"
 
     ];
 
@@ -558,16 +555,10 @@
 
         }
 
-        if (eintrag.status === "Angekommen") {
-
-            return {
-                warnung: false,
-                text: "✓"
-            };
-
-        }
-
-        if (eintrag.status === "Rückweg") {
+        if (
+            eintrag.status === "Angekommen" ||
+            eintrag.status === "Rückweg"
+        ) {
 
             return {
                 warnung: false,
@@ -642,7 +633,6 @@
             if (!snapshot.exists()) {
 
                 historieInhalt.innerHTML =
-
                     "<div class='historie-leer'>" +
                     "Noch keine Meldungen vorhanden." +
                     "</div>";
@@ -721,7 +711,6 @@
         catch (fehler) {
 
             historieInhalt.innerHTML =
-
                 "<div class='historie-leer'>" +
                 "Archiv konnte nicht geladen werden." +
                 "</div>";
@@ -847,8 +836,7 @@
 
                 historieZeile.innerHTML =
 
-                    "<td colspan='7' " +
-                    "class='historie-zelle'>" +
+                    "<td colspan='7' class='historie-zelle'>" +
 
                         "<div class='historie-box'>" +
 
