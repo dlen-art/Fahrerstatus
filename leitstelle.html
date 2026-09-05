@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fahrerstatus – Leitstelle</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #202124;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 5px;
+        }
+
+        .untertitel {
+            color: #aaaaaa;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2b2c2f;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #35363a;
+            padding: 18px;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        td {
+            padding: 18px;
+            border-top: 1px solid #444;
+            font-size: 20px;
+        }
+
+        .status-angekommen {
+            color: #18c964;
+            font-weight: bold;
+        }
+
+        .status-abfahrt {
+            color: #2d7ff9;
+            font-weight: bold;
+        }
+
+        .status-rueckweg {
+            color: #f5a524;
+            font-weight: bold;
+        }
+
+        #keineDaten {
+            color: #aaaaaa;
+            font-size: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🚚 Fahrerstatus – Leitstelle</h1>
+
+    <div class="untertitel">
+        Live-Übersicht der aktuellen Touren
+    </div>
+
+    <table id="statusTabelle" style="display:none;">
+
+        <thead>
+            <tr>
+                <th>Tour</th>
+                <th>Fahrer</th>
+                <th>Schicht</th>
+                <th>Status</th>
+                <th>Zeit</th>
+            </tr>
+        </thead>
+
+        <tbody id="statusListe">
+        </tbody>
+
+    </table>
+
+    <div id="keineDaten">
+        Warte auf Fahrerstatus...
+    </div>
+
+</div>
+
+
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+    import {
+        getDatabase,
+        ref,
+        onValue
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyAY_J2fSlFdkZLIwcovITrcPulhgSpDgfC",
+
+        authDomain: "fahrerstatus.firebaseapp.com",
+
+        databaseURL: "https://fahrerstatus-default-rtdb.europe-west1.firebasedatabase.app",
+
+        projectId: "fahrerstatus",
+
+        storageBucket: "fahrerstatus.firebasestorage.app",
+
+        messagingSenderId: "649331574277",
+
+        appId: "1:649331574277:web:eec4f352f995da9ba9be6c"
+
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+
+    const database = getDatabase(app);
+
+    const statusRef = ref(database, "status");
+
+
+    onValue(statusRef, function(snapshot) {
+
+        const daten = snapshot.val();
+
+        const liste = document.getElementById("statusListe");
+
+        const tabelle = document.getElementById("statusTabelle");
+
+        const keineDaten = document.getElementById("keineDaten");
+
+
+        liste.innerHTML = "";
+
+
+        if (!daten) {
+
+            tabelle.style.display = "none";
+
+            keineDaten.style.display = "block";
+
+            return;
+
+        }
+
+
+        tabelle.style.display = "table";
+
+        keineDaten.style.display = "none";
+
+
+        Object.keys(daten).sort().forEach(function(tourNummer) {
+
+            const eintrag = daten[tourNummer];
+
+            let statusText = eintrag.status;
+
+            let statusKlasse = "";
+
+
+            if (eintrag.status === "Angekommen") {
+
+                statusText = "🟢 Angekommen";
+
+                statusKlasse = "status-angekommen";
+
+            }
+
+            else if (eintrag.status === "Abfahrt") {
+
+                statusText = "🔵 Abfahrt";
+
+                statusKlasse = "status-abfahrt";
+
+            }
+
+            else if (eintrag.status === "Rückweg") {
+
+                statusText = "🟡 Rückweg";
+
+                statusKlasse = "status-rueckweg";
+
+            }
+
+
+            const zeile = document.createElement("tr");
+
+
+            zeile.innerHTML =
+
+                "<td><b>" + eintrag.tour + "</b></td>" +
+
+                "<td>" + eintrag.fahrer + "</td>" +
+
+                "<td>" + eintrag.schicht + "</td>" +
+
+                "<td class='" + statusKlasse + "'>" +
+                    statusText +
+                "</td>" +
+
+                "<td>" + eintrag.zeit + "</td>";
+
+
+            liste.appendChild(zeile);
+
+        });
+
+    });
+
+</script>
+
+</body>
+
+</html>
