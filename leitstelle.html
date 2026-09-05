@@ -8,6 +8,7 @@
     <title>Fahrerstatus – Leitstelle</title>
 
     <style>
+
         body {
             margin: 0;
             padding: 30px;
@@ -156,9 +157,13 @@
             .historie-eintrag {
                 grid-template-columns: 1fr 1fr;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
@@ -170,17 +175,23 @@
         Live-Übersicht der aktuellen Touren
     </div>
 
+
     <table>
 
         <thead>
+
             <tr>
+
                 <th>Tour</th>
                 <th>Fahrer</th>
                 <th>Schicht</th>
                 <th>Status</th>
                 <th>Zeit</th>
+
             </tr>
+
         </thead>
+
 
         <tbody id="statusListe">
         </tbody>
@@ -190,10 +201,12 @@
 </div>
 
 
+
 <script type="module">
 
     import { initializeApp }
         from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
 
     import {
         getDatabase,
@@ -203,7 +216,9 @@
         orderByChild,
         limitToLast,
         get
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+    }
+    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
 
 
     const firebaseConfig = {
@@ -227,6 +242,7 @@
     };
 
 
+
     const app = initializeApp(firebaseConfig);
 
     const database = getDatabase(app);
@@ -234,7 +250,9 @@
     const statusRef = ref(database, "status");
 
 
+
     const aktiveTouren = [
+
         "4001",
         "4003",
         "4004",
@@ -249,7 +267,9 @@
         "5011",
         "5026",
         "5032"
+
     ];
+
 
 
     function statusDarstellen(status) {
@@ -263,6 +283,7 @@
 
         }
 
+
         if (status === "Abfahrt") {
 
             return {
@@ -271,6 +292,7 @@
             };
 
         }
+
 
         if (status === "Rückweg") {
 
@@ -281,6 +303,7 @@
 
         }
 
+
         return {
             text: status || "⚪ Noch keine Meldung",
             klasse: "status-offen"
@@ -289,11 +312,13 @@
     }
 
 
+
     async function historieOeffnen(tourNummer, historieZeile) {
 
         if (historieZeile.classList.contains("offen")) {
 
             historieZeile.classList.remove("offen");
+
             return;
 
         }
@@ -321,18 +346,27 @@
 
         try {
 
-            const historieRef =
+            /*
+                Alle Meldungen werden vom Fahrer
+                unter "archiv/Tournummer" gespeichert.
+            */
+
+            const archivRef =
                 ref(database, "archiv/" + tourNummer);
 
 
-            const historieQuery = query(
-                historieRef,
+            const archivQuery = query(
+
+                archivRef,
+
                 orderByChild("timestamp"),
+
                 limitToLast(36)
+
             );
 
 
-            const snapshot = await get(historieQuery);
+            const snapshot = await get(archivQuery);
 
             const daten = snapshot.val();
 
@@ -340,8 +374,9 @@
             if (!daten) {
 
                 historieInhalt.innerHTML =
+
                     "<div class='historie-leer'>" +
-                    "Noch keine Historie vorhanden." +
+                    "Noch keine Meldungen im Archiv vorhanden." +
                     "</div>";
 
                 return;
@@ -351,6 +386,10 @@
 
             let eintraege = Object.values(daten);
 
+
+            /*
+                Neueste Meldung zuerst
+            */
 
             eintraege.sort(function(a, b) {
 
@@ -372,27 +411,41 @@
                     document.createElement("div");
 
 
-                zeile.className = "historie-eintrag";
+                zeile.className =
+                    "historie-eintrag";
 
 
                 zeile.innerHTML =
 
                     "<div class='historie-datum'>" +
+
                         (eintrag.datum || "-") +
+
                     "</div>" +
+
 
                     "<div class='historie-zeit'>" +
+
                         (eintrag.zeit || "-") +
+
                     "</div>" +
+
 
                     "<div class='" +
+
                         status.klasse +
+
                     "'>" +
+
                         status.text +
+
                     "</div>" +
 
+
                     "<div class='historie-fahrer'>" +
+
                         (eintrag.fahrer || "-") +
+
                     "</div>";
 
 
@@ -401,12 +454,16 @@
             });
 
 
-        } catch (fehler) {
+        }
+
+        catch (fehler) {
 
             historieInhalt.innerHTML =
+
                 "<div class='historie-leer'>" +
-                "Historie konnte nicht geladen werden." +
+                "Archiv konnte nicht geladen werden." +
                 "</div>";
+
 
             console.error(fehler);
 
@@ -415,72 +472,109 @@
     }
 
 
+
     onValue(statusRef, function(snapshot) {
 
-        const daten = snapshot.val() || {};
+        const daten =
+            snapshot.val() || {};
+
 
         const liste =
             document.getElementById("statusListe");
+
 
         liste.innerHTML = "";
 
 
         aktiveTouren.forEach(function(tourNummer) {
 
-            const eintrag = daten[tourNummer];
+            const eintrag =
+                daten[tourNummer];
+
 
             let fahrer = "-";
+
             let schicht = "-";
+
             let zeit = "-";
 
-            let status = statusDarstellen(null);
+            let status =
+                statusDarstellen(null);
 
 
             if (eintrag) {
 
-                fahrer = eintrag.fahrer || "-";
-                schicht = eintrag.schicht || "-";
-                zeit = eintrag.zeit || "-";
+                fahrer =
+                    eintrag.fahrer || "-";
+
+                schicht =
+                    eintrag.schicht || "-";
+
+                zeit =
+                    eintrag.zeit || "-";
 
                 status =
-                    statusDarstellen(eintrag.status);
+                    statusDarstellen(
+                        eintrag.status
+                    );
 
             }
+
 
 
             const zeile =
                 document.createElement("tr");
 
-            zeile.className = "tour-zeile";
+
+            zeile.className =
+                "tour-zeile";
 
 
             zeile.innerHTML =
 
                 "<td><b>" +
+
                     tourNummer +
+
                 "</b></td>" +
 
-                "<td>" +
-                    fahrer +
-                "</td>" +
 
                 "<td>" +
-                    schicht +
+
+                    fahrer +
+
                 "</td>" +
+
+
+                "<td>" +
+
+                    schicht +
+
+                "</td>" +
+
 
                 "<td class='" +
+
                     status.klasse +
+
                 "'>" +
+
                     status.text +
+
                 "</td>" +
 
+
                 "<td>" +
+
                     zeit +
+
                 "</td>";
+
 
 
             const historieZeile =
                 document.createElement("tr");
+
 
             historieZeile.className =
                 "historie-zeile";
@@ -493,14 +587,18 @@
                     "<div class='historie-box'>" +
 
                         "<div class='historie-titel'>" +
+
                             "Verlauf – Tour " +
                             tourNummer +
+
                         "</div>" +
 
                         "<div class='historie-scroll'>" +
 
                             "<div class='historie-leer'>" +
-                                "Historie laden..." +
+
+                                "Archiv laden..." +
+
                             "</div>" +
 
                         "</div>" +
@@ -510,16 +608,23 @@
                 "</td>";
 
 
+
             zeile.addEventListener(
+
                 "click",
+
                 function() {
 
                     historieOeffnen(
+
                         tourNummer,
+
                         historieZeile
+
                     );
 
                 }
+
             );
 
 
@@ -532,6 +637,7 @@
     });
 
 </script>
+
 
 </body>
 
