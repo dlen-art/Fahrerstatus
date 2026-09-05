@@ -257,7 +257,8 @@ async function statusSenden(status) {
 
     try {
 
-        let antwort = await fetch(
+        // Aktuellen Status der Tour speichern
+        let statusAntwort = await fetch(
             datenbankUrl + "/status/" + aktuelleTour + ".json",
             {
                 method: "PUT",
@@ -268,11 +269,31 @@ async function statusSenden(status) {
             }
         );
 
-        if (!antwort.ok) {
+        if (!statusAntwort.ok) {
 
-            throw new Error("Daten konnten nicht gesendet werden.");
+            throw new Error("Aktueller Status konnte nicht gespeichert werden.");
 
         }
+
+
+        // Jeden Status zusätzlich dauerhaft im Archiv speichern
+        let archivAntwort = await fetch(
+            datenbankUrl + "/archiv/" + aktuelleTour + ".json",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(daten)
+            }
+        );
+
+        if (!archivAntwort.ok) {
+
+            throw new Error("Archiv konnte nicht gespeichert werden.");
+
+        }
+
 
         document.getElementById("statusScreen").style.display = "none";
         document.getElementById("successScreen").style.display = "block";
