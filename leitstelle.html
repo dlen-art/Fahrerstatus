@@ -364,8 +364,6 @@
 
 
 
-    const ANGEKOMMEN_MAX_MINUTEN = 30;
-
     const ABFAHRT_MAX_MINUTEN = 80;
 
 
@@ -547,27 +545,6 @@
 
 
         if (
-            eintrag.status === "Angekommen" &&
-            minuten > ANGEKOMMEN_MAX_MINUTEN
-        ) {
-
-            const ueberfaellig =
-                minuten -
-                ANGEKOMMEN_MAX_MINUTEN;
-
-
-            return {
-                warnung: true,
-                text:
-                    "⚠️ Abfahrt überfällig – " +
-                    ueberfaellig +
-                    " Min."
-            };
-
-        }
-
-
-        if (
             eintrag.status === "Abfahrt" &&
             minuten > ABFAHRT_MAX_MINUTEN
         ) {
@@ -588,24 +565,6 @@
         }
 
 
-        if (eintrag.status === "Angekommen") {
-
-            const verbleibend =
-                ANGEKOMMEN_MAX_MINUTEN -
-                minuten;
-
-
-            return {
-                warnung: false,
-                text:
-                    "Abfahrt in " +
-                    verbleibend +
-                    " Min."
-            };
-
-        }
-
-
         if (eintrag.status === "Abfahrt") {
 
             const verbleibend =
@@ -619,6 +578,16 @@
                     "Rückweg in " +
                     verbleibend +
                     " Min."
+            };
+
+        }
+
+
+        if (eintrag.status === "Angekommen") {
+
+            return {
+                warnung: false,
+                text: "✓"
             };
 
         }
