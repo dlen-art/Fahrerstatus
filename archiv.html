@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fahrerstatus – Archiv</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #202124;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 5px;
+        }
+
+        .untertitel {
+            color: #aaaaaa;
+            font-size: 18px;
+            margin-bottom: 25px;
+        }
+
+        .steuerung {
+            background: #2b2c2f;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        input[type="date"] {
+            background: #35363a;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 18px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 13px 22px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #2d7ff9;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .zurueck {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #8ab4f8;
+            text-decoration: none;
+            font-size: 17px;
+        }
+
+        .meldung {
+            background: #2b2c2f;
+            border-radius: 14px;
+            padding: 22px;
+            color: #bbbbbb;
+            font-size: 18px;
+        }
+
+        .tour-box {
+            background: #2b2c2f;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .tour-kopf {
+            display: grid;
+            grid-template-columns: 120px 1fr 160px;
+            gap: 15px;
+            align-items: center;
+            padding: 18px 22px;
+            cursor: pointer;
+        }
+
+        .tour-kopf:hover {
+            background: #35363a;
+        }
+
+        .tour-nummer {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .tour-fahrer {
+            font-size: 18px;
+            color: #dddddd;
+        }
+
+        .tour-anzahl {
+            text-align: right;
+            color: #aaaaaa;
+        }
+
+        .tour-details {
+            display: none;
+            background: #18191b;
+            padding: 12px 22px 20px 22px;
+        }
+
+        .tour-details.offen {
+            display: block;
+        }
+
+        .status-eintrag {
+            display: grid;
+            grid-template-columns: 120px 1fr 220px 100px;
+            gap: 15px;
+            align-items: center;
+            padding: 14px 12px;
+            border-bottom: 1px solid #3b3c3f;
+            font-size: 17px;
+        }
+
+        .status-eintrag:last-child {
+            border-bottom: none;
+        }
+
+        .zeit {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .fahrer {
+            color: #cccccc;
+        }
+
+        .schicht {
+            color: #aaaaaa;
+        }
+
+        .status-angekommen {
+            color: #18c964;
+            font-weight: bold;
+        }
+
+        .status-abfahrt {
+            color: #2d7ff9;
+            font-weight: bold;
+        }
+
+        .status-rueckweg {
+            color: #f5a524;
+            font-weight: bold;
+        }
+
+        .status-sonstig {
+            color: #cccccc;
+            font-weight: bold;
+        }
+
+        @media (max-width: 750px) {
+
+            body {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .tour-kopf {
+                grid-template-columns: 80px 1fr;
+            }
+
+            .tour-anzahl {
+                grid-column: 1 / -1;
+                text-align: left;
+            }
+
+            .status-eintrag {
+                grid-template-columns: 90px 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <a class="zurueck" href="leitstelle.html">
+        ← Zurück zur Leitstelle
+    </a>
+
+    <h1>📁 Fahrerstatus – Archiv</h1>
+
+    <div class="untertitel">
+        Meldungen nach Datum anzeigen
+    </div>
+
+
+    <div class="steuerung">
+
+        <label for="datumAuswahl">
+            Datum:
+        </label>
+
+        <input
+            type="date"
+            id="datumAuswahl"
+        >
+
+        <button id="anzeigenButton">
+            Anzeigen
+        </button>
+
+    </div>
+
+
+    <div id="archivInhalt">
+
+        <div class="meldung">
+            Bitte Datum auswählen.
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script type="module">
+
+    import { initializeApp }
+        from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+    import {
+        getDatabase,
+        ref,
+        get
+    }
+    from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyAY_J2fSlFdkZLIwcovITrcPulhgSpDgfC",
+
+        authDomain: "fahrerstatus.firebaseapp.com",
+
+        databaseURL:
+            "https://fahrerstatus-default-rtdb.europe-west1.firebasedatabase.app",
+
+        projectId: "fahrerstatus",
+
+        storageBucket: "fahrerstatus.firebasestorage.app",
+
+        messagingSenderId: "649331574277",
+
+        appId:
+            "1:649331574277:web:eec4f352f995da9ba9be6c"
+
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+
+    const database = getDatabase(app);
+
+
+    const datumAuswahl =
+        document.getElementById("datumAuswahl");
+
+    const anzeigenButton =
+        document.getElementById("anzeigenButton");
+
+    const archivInhalt =
+        document.getElementById("archivInhalt");
+
+
+
+    function heutigesDatumSetzen() {
+
+        const heute = new Date();
+
+        const jahr =
+            heute.getFullYear();
+
+        const monat =
+            String(heute.getMonth() + 1).padStart(2, "0");
+
+        const tag =
+            String(heute.getDate()).padStart(2, "0");
+
+        datumAuswahl.value =
+            jahr + "-" + monat + "-" + tag;
+
+    }
+
+
+
+    function deutschesDatum(isoDatum) {
+
+        const teile =
+            isoDatum.split("-");
+
+        return (
+            parseInt(teile[2]) +
+            "." +
+            parseInt(teile[1]) +
+            "." +
+            teile[0]
+        );
+
+    }
+
+
+
+    function statusDarstellen(status) {
+
+        if (status === "Angekommen") {
+
+            return {
+                text: "🟢 Angekommen",
+                klasse: "status-angekommen"
+            };
+
+        }
+
+        if (status === "Abfahrt") {
+
+            return {
+                text: "🔵 Abfahrt",
+                klasse: "status-abfahrt"
+            };
+
+        }
+
+        if (status === "Rückweg") {
+
+            return {
+                text: "🟡 Rückweg",
+                klasse: "status-rueckweg"
+            };
+
+        }
+
+        return {
+            text: status || "-",
+            klasse: "status-sonstig"
+        };
+
+    }
+
+
+
+    async function archivLaden() {
+
+        const ausgewaehltesDatum =
+            datumAuswahl.value;
+
+
+        if (!ausgewaehltesDatum) {
+
+            archivInhalt.innerHTML =
+                "<div class='meldung'>" +
+                "Bitte Datum auswählen." +
+                "</div>";
+
+            return;
+
+        }
+
+
+        const gesuchtesDatum =
+            deutschesDatum(ausgewaehltesDatum);
+
+
+        archivInhalt.innerHTML =
+            "<div class='meldung'>" +
+            "Archiv wird geladen..." +
+            "</div>";
+
+
+        try {
+
+            const archivRef =
+                ref(database, "archiv");
+
+
+            const snapshot =
+                await get(archivRef);
+
+
+            if (!snapshot.exists()) {
+
+                archivInhalt.innerHTML =
+                    "<div class='meldung'>" +
+                    "Noch keine Archivdaten vorhanden." +
+                    "</div>";
+
+                return;
+
+            }
+
+
+            const archivDaten =
+                snapshot.val();
+
+
+            let gefundeneTouren = [];
+
+
+            Object.keys(archivDaten).forEach(
+                function(tourNummer) {
+
+                    const tourArchiv =
+                        archivDaten[tourNummer];
+
+
+                    let meldungen = [];
+
+
+                    Object.values(tourArchiv).forEach(
+                        function(eintrag) {
+
+                            if (
+                                eintrag.datum ===
+                                gesuchtesDatum
+                            ) {
+
+                                meldungen.push(eintrag);
+
+                            }
+
+                        }
+                    );
+
+
+                    if (meldungen.length > 0) {
+
+                        meldungen.sort(
+                            function(a, b) {
+
+                                return (
+                                    (a.timestamp || 0) -
+                                    (b.timestamp || 0)
+                                );
+
+                            }
+                        );
+
+
+                        gefundeneTouren.push({
+
+                            tour: tourNummer,
+
+                            meldungen: meldungen
+
+                        });
+
+                    }
+
+                }
+            );
+
+
+            gefundeneTouren.sort(
+                function(a, b) {
+
+                    return a.tour.localeCompare(
+                        b.tour,
+                        undefined,
+                        {
+                            numeric: true
+                        }
+                    );
+
+                }
+            );
+
+
+            if (gefundeneTouren.length === 0) {
+
+                archivInhalt.innerHTML =
+
+                    "<div class='meldung'>" +
+
+                    "Keine Meldungen für den " +
+                    gesuchtesDatum +
+                    " gefunden." +
+
+                    "</div>";
+
+                return;
+
+            }
+
+
+            archivInhalt.innerHTML = "";
+
+
+            gefundeneTouren.forEach(
+                function(tourDaten) {
+
+                    const box =
+                        document.createElement("div");
+
+
+                    box.className =
+                        "tour-box";
+
+
+                    const letzterEintrag =
+                        tourDaten.meldungen[
+                            tourDaten.meldungen.length - 1
+                        ];
+
+
+                    const fahrer =
+                        letzterEintrag.fahrer || "-";
+
+
+                    const kopf =
+                        document.createElement("div");
+
+
+                    kopf.className =
+                        "tour-kopf";
+
+
+                    kopf.innerHTML =
+
+                        "<div class='tour-nummer'>" +
+                            "Tour " +
+                            tourDaten.tour +
+                        "</div>" +
+
+                        "<div class='tour-fahrer'>" +
+                            "👤 " +
+                            fahrer +
+                        "</div>" +
+
+                        "<div class='tour-anzahl'>" +
+                            tourDaten.meldungen.length +
+                            " Meldungen" +
+                        "</div>";
+
+
+                    const details =
+                        document.createElement("div");
+
+
+                    details.className =
+                        "tour-details";
+
+
+                    tourDaten.meldungen.forEach(
+                        function(eintrag) {
+
+                            const status =
+                                statusDarstellen(
+                                    eintrag.status
+                                );
+
+
+                            const statusZeile =
+                                document.createElement("div");
+
+
+                            statusZeile.className =
+                                "status-eintrag";
+
+
+                            statusZeile.innerHTML =
+
+                                "<div class='zeit'>" +
+                                    (eintrag.zeit || "-") +
+                                "</div>" +
+
+                                "<div class='" +
+                                    status.klasse +
+                                "'>" +
+                                    status.text +
+                                "</div>" +
+
+                                "<div class='fahrer'>" +
+                                    "👤 " +
+                                    (eintrag.fahrer || "-") +
+                                "</div>" +
+
+                                "<div class='schicht'>" +
+                                    (eintrag.schicht || "-") +
+                                "</div>";
+
+
+                            details.appendChild(
+                                statusZeile
+                            );
+
+                        }
+                    );
+
+
+                    kopf.addEventListener(
+                        "click",
+                        function() {
+
+                            details.classList.toggle(
+                                "offen"
+                            );
+
+                        }
+                    );
+
+
+                    box.appendChild(kopf);
+
+                    box.appendChild(details);
+
+                    archivInhalt.appendChild(box);
+
+                }
+            );
+
+        }
+
+        catch (fehler) {
+
+            archivInhalt.innerHTML =
+
+                "<div class='meldung'>" +
+                "Archiv konnte nicht geladen werden." +
+                "</div>";
+
+
+            console.error(fehler);
+
+        }
+
+    }
+
+
+
+    anzeigenButton.addEventListener(
+        "click",
+        archivLaden
+    );
+
+
+    datumAuswahl.addEventListener(
+        "change",
+        archivLaden
+    );
+
+
+    heutigesDatumSetzen();
+
+    archivLaden();
+
+</script>
+
+
+</body>
+
+</html>
