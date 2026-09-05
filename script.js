@@ -9,6 +9,11 @@ let fahrer = localStorage.getItem("fahrer");
 let html5QrCode = null;
 
 
+// Firebase Realtime Database
+const datenbankUrl =
+    "https://fahrerstatus-default-rtdb.europe-west1.firebasedatabase.app";
+
+
 window.onload = function () {
 
     document.getElementById("fahrerScreen").style.display = "none";
@@ -234,28 +239,67 @@ function tourOeffnen(text) {
 }
 
 
-function statusSenden(status) {
+async function statusSenden(status) {
 
-    document.getElementById("statusScreen").style.display = "none";
-    document.getElementById("successScreen").style.display = "block";
+    let jetzt = new Date();
 
-    let zeit = new Date().toLocaleTimeString("de-DE");
+    let daten = {
 
-    document.getElementById("meldung").innerHTML =
+        fahrer: fahrer,
+        tour: aktuelleTour,
+        schicht: aktuelleSchicht,
+        status: status,
+        zeit: jetzt.toLocaleTimeString("de-DE"),
+        datum: jetzt.toLocaleDateString("de-DE"),
+        timestamp: jetzt.getTime()
 
-        "👤 " + fahrer +
-        "<br><br>" +
-        "Tour " + aktuelleTour +
-        "<br>" +
-        status +
-        "<br>" +
-        zeit;
+    };
 
-    setTimeout(function () {
+    try {
 
-        document.getElementById("successScreen").style.display = "none";
-        document.getElementById("statusScreen").style.display = "block";
+        let antwort = await fetch(
+            datenbankUrl + "/status/" + aktuelleTour + ".json",
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(daten)
+            }
+        );
 
-    }, 2000);
+        if (!antwort.ok) {
+
+            throw new Error("Daten konnten nicht gesendet werden.");
+
+        }
+
+        document.getElementById("statusScreen").style.display = "none";
+        document.getElementById("successScreen").style.display = "block";
+
+        document.getElementById("meldung").innerHTML =
+
+            "👤 " + fahrer +
+            "<br><br>" +
+            "Tour " + aktuelleTour +
+            "<br>" +
+            status +
+            "<br>" +
+            daten.zeit;
+
+        setTimeout(function () {
+
+            document.getElementById("successScreen").style.display = "none";
+            document.getElementById("statusScreen").style.display = "block";
+
+        }, 2000);
+
+    } catch (fehler) {
+
+        alert("Status konnte nicht gesendet werden.");
+
+        console.error(fehler);
+
+    }
 
 }
