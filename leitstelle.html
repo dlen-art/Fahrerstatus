@@ -18,7 +18,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1250px;
             margin: auto;
         }
 
@@ -106,6 +106,12 @@
             font-weight: bold;
         }
 
+        .seit {
+            color: #b7b7b7;
+            font-size: 17px;
+            white-space: nowrap;
+        }
+
         .historie-zeile {
             display: none;
         }
@@ -173,7 +179,7 @@
             padding: 18px;
         }
 
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
 
             body {
                 padding: 15px;
@@ -199,6 +205,16 @@
 
             .historie-eintrag {
                 grid-template-columns: 1fr 1fr;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+                font-size: 16px;
+            }
+
+            .seit {
+                font-size: 15px;
             }
 
         }
@@ -242,6 +258,7 @@
                 <th>Schicht</th>
                 <th>Status</th>
                 <th>Zeit</th>
+                <th>Seit</th>
             </tr>
 
         </thead>
@@ -322,6 +339,9 @@
     ];
 
 
+    let aktuelleStatusDaten = {};
+
+
 
     function statusDarstellen(status) {
 
@@ -364,11 +384,122 @@
 
 
 
-    async function archivOeffnen(tourNummer, historieZeile) {
+    function seitText(timestamp) {
 
-        if (historieZeile.classList.contains("offen")) {
+        if (!timestamp) {
+            return "-";
+        }
 
-            historieZeile.classList.remove("offen");
+
+        const jetzt =
+            Date.now();
+
+
+        let differenz =
+            jetzt - timestamp;
+
+
+        if (differenz < 0) {
+            differenz = 0;
+        }
+
+
+        const sekunden =
+            Math.floor(differenz / 1000);
+
+
+        const minuten =
+            Math.floor(sekunden / 60);
+
+
+        const stunden =
+            Math.floor(minuten / 60);
+
+
+        const tage =
+            Math.floor(stunden / 24);
+
+
+        if (sekunden < 60) {
+            return "gerade eben";
+        }
+
+
+        if (minuten < 60) {
+            return "vor " + minuten + " Min.";
+        }
+
+
+        if (stunden < 24) {
+
+            const restMinuten =
+                minuten % 60;
+
+
+            if (restMinuten === 0) {
+                return "vor " + stunden + " Std.";
+            }
+
+
+            return (
+                "vor " +
+                stunden +
+                " Std. " +
+                restMinuten +
+                " Min."
+            );
+
+        }
+
+
+        if (tage === 1) {
+            return "vor 1 Tag";
+        }
+
+
+        return "vor " + tage + " Tagen";
+
+    }
+
+
+
+    function seitAnzeigeAktualisieren() {
+
+        document
+            .querySelectorAll("[data-timestamp]")
+            .forEach(function(element) {
+
+                const timestamp =
+                    Number(
+                        element.getAttribute(
+                            "data-timestamp"
+                        )
+                    );
+
+
+                element.textContent =
+                    seitText(timestamp);
+
+            });
+
+    }
+
+
+
+    async function archivOeffnen(
+        tourNummer,
+        historieZeile
+    ) {
+
+        if (
+            historieZeile.classList.contains(
+                "offen"
+            )
+        ) {
+
+            historieZeile.classList.remove(
+                "offen"
+            );
 
             return;
 
@@ -376,29 +507,42 @@
 
 
         document
-            .querySelectorAll(".historie-zeile.offen")
+            .querySelectorAll(
+                ".historie-zeile.offen"
+            )
             .forEach(function(zeile) {
 
-                zeile.classList.remove("offen");
+                zeile.classList.remove(
+                    "offen"
+                );
 
             });
 
 
-        historieZeile.classList.add("offen");
+        historieZeile.classList.add(
+            "offen"
+        );
 
 
         const historieInhalt =
-            historieZeile.querySelector(".historie-scroll");
+            historieZeile.querySelector(
+                ".historie-scroll"
+            );
 
 
         historieInhalt.innerHTML =
-            "<div class='historie-leer'>Wird geladen...</div>";
+            "<div class='historie-leer'>" +
+            "Wird geladen..." +
+            "</div>";
 
 
         try {
 
             const archivRef =
-                ref(database, "archiv/" + tourNummer);
+                ref(
+                    database,
+                    "archiv/" + tourNummer
+                );
 
 
             const snapshot =
@@ -426,12 +570,16 @@
                 Object.values(daten);
 
 
-            eintraege.sort(function(a, b) {
+            eintraege.sort(
+                function(a, b) {
 
-                return (b.timestamp || 0) -
-                       (a.timestamp || 0);
+                    return (
+                        (b.timestamp || 0) -
+                        (a.timestamp || 0)
+                    );
 
-            });
+                }
+            );
 
 
             eintraege =
@@ -441,44 +589,52 @@
             historieInhalt.innerHTML = "";
 
 
-            eintraege.forEach(function(eintrag) {
+            eintraege.forEach(
+                function(eintrag) {
 
-                const status =
-                    statusDarstellen(eintrag.status);
-
-
-                const zeile =
-                    document.createElement("div");
-
-
-                zeile.className =
-                    "historie-eintrag";
+                    const status =
+                        statusDarstellen(
+                            eintrag.status
+                        );
 
 
-                zeile.innerHTML =
-
-                    "<div class='historie-datum'>" +
-                        (eintrag.datum || "-") +
-                    "</div>" +
-
-                    "<div class='historie-zeit'>" +
-                        (eintrag.zeit || "-") +
-                    "</div>" +
-
-                    "<div class='" +
-                        status.klasse +
-                    "'>" +
-                        status.text +
-                    "</div>" +
-
-                    "<div class='historie-fahrer'>" +
-                        (eintrag.fahrer || "-") +
-                    "</div>";
+                    const zeile =
+                        document.createElement(
+                            "div"
+                        );
 
 
-                historieInhalt.appendChild(zeile);
+                    zeile.className =
+                        "historie-eintrag";
 
-            });
+
+                    zeile.innerHTML =
+
+                        "<div class='historie-datum'>" +
+                            (eintrag.datum || "-") +
+                        "</div>" +
+
+                        "<div class='historie-zeit'>" +
+                            (eintrag.zeit || "-") +
+                        "</div>" +
+
+                        "<div class='" +
+                            status.klasse +
+                        "'>" +
+                            status.text +
+                        "</div>" +
+
+                        "<div class='historie-fahrer'>" +
+                            (eintrag.fahrer || "-") +
+                        "</div>";
+
+
+                    historieInhalt.appendChild(
+                        zeile
+                    );
+
+                }
+            );
 
 
         }
@@ -500,147 +656,194 @@
 
 
 
-    onValue(statusRef, function(snapshot) {
-
-        const daten =
-            snapshot.val() || {};
-
+    function leitstelleDarstellen() {
 
         const liste =
-            document.getElementById("statusListe");
+            document.getElementById(
+                "statusListe"
+            );
 
 
         liste.innerHTML = "";
 
 
-        aktiveTouren.forEach(function(tourNummer) {
+        aktiveTouren.forEach(
+            function(tourNummer) {
 
-            const eintrag =
-                daten[tourNummer];
-
-
-            let fahrer = "-";
-            let schicht = "-";
-            let zeit = "-";
-
-            let status =
-                statusDarstellen(null);
+                const eintrag =
+                    aktuelleStatusDaten[
+                        tourNummer
+                    ];
 
 
-            if (eintrag) {
+                let fahrer = "-";
+                let schicht = "-";
+                let zeit = "-";
+                let timestamp = 0;
 
-                fahrer =
-                    eintrag.fahrer || "-";
+                let status =
+                    statusDarstellen(null);
 
-                schicht =
-                    eintrag.schicht || "-";
 
-                zeit =
-                    eintrag.zeit || "-";
+                if (eintrag) {
 
-                status =
-                    statusDarstellen(
-                        eintrag.status
+                    fahrer =
+                        eintrag.fahrer || "-";
+
+                    schicht =
+                        eintrag.schicht || "-";
+
+                    zeit =
+                        eintrag.zeit || "-";
+
+                    timestamp =
+                        eintrag.timestamp || 0;
+
+                    status =
+                        statusDarstellen(
+                            eintrag.status
+                        );
+
+                }
+
+
+
+                const zeile =
+                    document.createElement(
+                        "tr"
                     );
 
-            }
+
+                zeile.className =
+                    "tour-zeile";
+
+
+                zeile.innerHTML =
+
+                    "<td><b>" +
+                        tourNummer +
+                    "</b></td>" +
+
+                    "<td>" +
+                        fahrer +
+                    "</td>" +
+
+                    "<td>" +
+                        schicht +
+                    "</td>" +
+
+                    "<td class='" +
+                        status.klasse +
+                    "'>" +
+                        status.text +
+                    "</td>" +
+
+                    "<td>" +
+                        zeit +
+                    "</td>" +
+
+                    "<td class='seit' " +
+                    "data-timestamp='" +
+                        timestamp +
+                    "'>" +
+                        seitText(timestamp) +
+                    "</td>";
 
 
 
-            const zeile =
-                document.createElement("tr");
+                const historieZeile =
+                    document.createElement(
+                        "tr"
+                    );
 
 
-            zeile.className =
-                "tour-zeile";
+                historieZeile.className =
+                    "historie-zeile";
 
 
-            zeile.innerHTML =
+                historieZeile.innerHTML =
 
-                "<td><b>" +
-                    tourNummer +
-                "</b></td>" +
+                    "<td colspan='6' " +
+                    "class='historie-zelle'>" +
 
-                "<td>" +
-                    fahrer +
-                "</td>" +
+                        "<div class='historie-box'>" +
 
-                "<td>" +
-                    schicht +
-                "</td>" +
+                            "<div class='historie-titel'>" +
+                                "Verlauf – Tour " +
+                                tourNummer +
+                            "</div>" +
 
-                "<td class='" +
-                    status.klasse +
-                "'>" +
-                    status.text +
-                "</td>" +
+                            "<div class='historie-hinweis'>" +
+                                "Letzte 36 Meldungen" +
+                            "</div>" +
 
-                "<td>" +
-                    zeit +
-                "</td>";
+                            "<div class='historie-scroll'>" +
 
+                                "<div class='historie-leer'>" +
+                                    "Archiv laden..." +
+                                "</div>" +
 
-
-            const historieZeile =
-                document.createElement("tr");
-
-
-            historieZeile.className =
-                "historie-zeile";
-
-
-            historieZeile.innerHTML =
-
-                "<td colspan='5' class='historie-zelle'>" +
-
-                    "<div class='historie-box'>" +
-
-                        "<div class='historie-titel'>" +
-                            "Verlauf – Tour " +
-                            tourNummer +
-                        "</div>" +
-
-                        "<div class='historie-hinweis'>" +
-                            "Letzte 36 Meldungen" +
-                        "</div>" +
-
-                        "<div class='historie-scroll'>" +
-
-                            "<div class='historie-leer'>" +
-                                "Archiv laden..." +
                             "</div>" +
 
                         "</div>" +
 
-                    "</div>" +
-
-                "</td>";
+                    "</td>";
 
 
 
-            zeile.addEventListener(
+                zeile.addEventListener(
 
-                "click",
+                    "click",
 
-                function() {
+                    function() {
 
-                    archivOeffnen(
-                        tourNummer,
-                        historieZeile
-                    );
+                        archivOeffnen(
+                            tourNummer,
+                            historieZeile
+                        );
 
-                }
+                    }
 
-            );
+                );
 
 
-            liste.appendChild(zeile);
+                liste.appendChild(
+                    zeile
+                );
 
-            liste.appendChild(historieZeile);
+                liste.appendChild(
+                    historieZeile
+                );
 
-        });
+            }
+        );
 
-    });
+
+        seitAnzeigeAktualisieren();
+
+    }
+
+
+
+    onValue(
+        statusRef,
+        function(snapshot) {
+
+            aktuelleStatusDaten =
+                snapshot.val() || {};
+
+
+            leitstelleDarstellen();
+
+        }
+    );
+
+
+
+    setInterval(
+        seitAnzeigeAktualisieren,
+        60000
+    );
 
 </script>
 
